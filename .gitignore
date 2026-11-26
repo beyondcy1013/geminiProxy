@@ -1,0 +1,8 @@
+/target
+target/
+data/
+dist/
+*.log
+AGENTS.md
+deploy/gemini-proxy.service
+scripts/deploy-gemini-proxy.sh

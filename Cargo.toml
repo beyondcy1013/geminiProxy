@@ -1,0 +1,54 @@
+[package]
+name = "gemini-proxy"
+version = "0.1.0"
+edition = "2024"
+description = "Turn any CLI AI agent (Gemini CLI, Claude Code, Codex, CodeBuddy) in tmux/ConPTY into an OpenAI-compatible LLM API with Web UI and Native Desktop GUI"
+license = "MIT"
+repository = "https://github.com/beyondcy1013/geminiProxy"
+homepage = "https://github.com/beyondcy1013/geminiProxy"
+keywords = ["openai", "llm", "proxy", "tmux", "agent"]
+categories = ["command-line-utilities", "web-programming::http-server"]
+
+[features]
+default = []
+gui = ["dep:eframe"]
+
+[lib]
+name = "gemini_proxy"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gemini-proxy"
+path = "src/main.rs"
+
+[[bin]]
+name = "gemini-proxy-gui"
+path = "src/gui_main.rs"
+required-features = ["gui"]
+
+[dependencies]
+anyhow = "1.0"
+axum = { version = "0.8", features = ["ws"] }
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"], optional = true }
+futures-util = "0.3"
+hex = "0.4"
+portable-pty = "0.8"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.11"
+subtle = "2"
+tokio = { version = "1.44", features = [
+    "fs",
+    "io-util",
+    "macros",
+    "net",
+    "process",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+    "time",
+] }
+tower-http = { version = "0.6", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

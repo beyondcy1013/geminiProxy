@@ -1,0 +1,82 @@
+name: CI & Release
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-linux:
+    name: Test & Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tmux pkg-config libxkbcommon-dev libwayland-dev libxrandr-dev libxi-dev libgl1-mesa-dev
+      - name: Run unit tests (with GUI feature)
+        run: cargo test --features gui
+      - name: Build Linux release binaries
+        run: cargo build --release --features gui
+      - name: Stage Linux release artifacts
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          mkdir -p dist
+          cp target/release/gemini-proxy dist/gemini-proxy-linux-x86_64
+          cp target/release/gemini-proxy-gui dist/gemini-proxy-gui-linux-x86_64
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: linux-binaries
+          path: dist/
+
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run unit tests (with GUI feature)
+        run: cargo test --features gui
+      - name: Build Windows release binaries
+        run: cargo build --release --features gui
+      - name: Stage Windows release artifacts
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/gemini-proxy.exe dist/gemini-proxy-windows-x86_64.exe
+          cp target/release/gemini-proxy-gui.exe dist/gemini-proxy-gui-windows-x86_64.exe
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: windows-binaries
+          path: dist/
+
+  release:
+    name: Publish GitHub Release
+    needs: [test-linux, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Prepare checksums
+        run: |
+          mkdir -p release-files
+          cp artifacts/*/* release-files/
+          (cd release-files && sha256sum * > SHA256SUMS.txt)
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          generate_release_notes: true

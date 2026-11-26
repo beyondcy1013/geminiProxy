@@ -1,0 +1,22 @@
+[Unit]
+Description=geminiProxy - CLI Agent LLM API Proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/gemini-proxy
+Environment="RUST_LOG=info,tower_http=warn"
+# Optional: pluggable local account rotator integration when an agent reports quota exhaustion
+# Environment="ACCOUNT_ROTATOR_ADDR=127.0.0.1:11111"
+# Environment="ACCOUNT_ROTATOR_TOKEN_FILE=/path/to/rotator-local-api-token"
+ExecStart=/opt/gemini-proxy/gemini-proxy --host 0.0.0.0 --port 18789 --data-dir /var/lib/gemini-proxy --idle-quiesce-ms 1200
+KillMode=process
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gemini-proxy
+
+[Install]
+WantedBy=multi-user.target

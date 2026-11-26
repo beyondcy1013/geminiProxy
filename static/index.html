@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geminiProxy — tmux Agent LLM API Gateway</title>
+  <link rel="stylesheet" href="/vendor/xterm.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">geminiProxy</div>
+        <div class="brand-sub">tmux Agent → OpenAI LLM API</div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>终端会话 (tmux)</span>
+          <button id="btn-new-session" class="btn btn-primary btn-sm">+ 新建会话</button>
+        </div>
+        <div id="session-list" class="session-list">
+          <div class="empty-hint">暂无会话，点击右上角新建</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>API 代理测试</span>
+        </div>
+        <div class="api-info" id="api-info">加载中...</div>
+        <form id="api-test-form" class="stack-form">
+          <label>
+            <span>API Key (Bearer)</span>
+            <input id="api-key-input" type="password" placeholder="gp-..." autocomplete="off" />
+          </label>
+          <label>
+            <span>Model Alias</span>
+            <input id="api-model-input" type="text" placeholder="留空默认当前会话 model_alias" />
+          </label>
+          <label>
+            <span>Prompt</span>
+            <textarea id="api-prompt-input" rows="3" placeholder="输入要发给 tmux Agent 的测试消息..."></textarea>
+          </label>
+          <div class="row-actions">
+            <label class="checkbox-inline">
+              <input id="api-stream-checkbox" type="checkbox" />
+              <span>Stream SSE</span>
+            </label>
+            <button type="submit" class="btn btn-primary btn-sm" id="btn-send-api">发送请求</button>
+          </div>
+        </form>
+        <pre id="api-test-output" class="api-output">等待调用...</pre>
+      </section>
+    </aside>
+
+    <main class="main-pane">
+      <header class="toolbar">
+        <div class="toolbar-title">
+          <span id="active-session-title">未选择终端会话</span>
+          <span id="active-session-meta" class="meta-pill"></span>
+        </div>
+        <div class="toolbar-actions">
+          <button id="btn-send-enter" class="btn btn-sm" disabled>发送 Enter</button>
+          <button id="btn-snapshot" class="btn btn-sm" disabled>抓取文本快照</button>
+          <button id="btn-delete-session" class="btn btn-danger btn-sm" disabled>销毁会话</button>
+        </div>
+      </header>
+      <div id="terminal-container" class="terminal-container">
+        <div class="terminal-placeholder">请选择或创建一个 tmux 终端会话</div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="new-session-dialog" class="modal">
+    <form method="dialog" id="new-session-form" class="stack-form">
+      <h3>新建 tmux Agent 会话</h3>
+      <label>
+        <span>会话名称 *</span>
+        <input id="new-name" type="text" required placeholder="例如: agy-main" />
+      </label>
+      <label>
+        <span>Model Alias (供 /v1/chat/completions 的 model 字段匹配)</span>
+        <input id="new-model" type="text" placeholder="留空则与会话名称相同" />
+      </label>
+      <label>
+        <span>工作目录 (cwd)</span>
+        <input id="new-cwd" type="text" placeholder="/path/to/workspace" />
+      </label>
+      <label>
+        <span>启动命令 (可选，例如 agy / codex / claude / bash)</span>
+        <input id="new-cmd" type="text" placeholder="例如: agy" />
+      </label>
+      <label>
+        <span>Agent 类型</span>
+        <select id="new-agent-kind">
+          <option value="auto">Auto (自动探测)</option>
+          <option value="codebuddy">CodeBuddy</option>
+          <option value="agy">AGY</option>
+          <option value="codex">Codex</option>
+          <option value="claude">Claude</option>
+          <option value="generic">Generic / Shell</option>
+        </select>
+      </label>
+      <label class="checkbox-inline">
+        <input id="new-use-markers" type="checkbox" />
+        <span>启用响应标记包裹 (适合嘈杂 shell)</span>
+      </label>
+      <div class="modal-actions">
+        <button type="button" id="btn-cancel-modal" class="btn">取消</button>
+        <button type="submit" class="btn btn-primary">创建并连接</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/vendor/xterm.js"></script>
+  <script src="/vendor/xterm-addon-fit.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
